@@ -1,7 +1,2 @@
 - src: ANXS.nodejs
 - src: ANXS.build-essential
-
-- src: git@gitlab.xbudev.org:ansible-galaxy/manage-ccs-instance.git
-  version: "0.1"
-  name: cisco.manage-ccs-instance
-  scm: git

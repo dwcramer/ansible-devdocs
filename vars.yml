@@ -1,7 +1,10 @@
 flavor_id: bd5c0e9d-672d-4416-8a33-c7a7abe9400b
 network_id: f11ad390-334c-4580-9b50-48d3c8ed5bcb
 security_groups: devdocs
-hostname: devdocs
+hostname: devdocs2
 zone: xbudev.org
 image_name: trusty-server-cloudimg-amd64-disk1.2015-01-27
 linuxUser: ubuntu
+key_name: davcrame
+instance_state: present
+floating_ip_pools: '[ "public-floating-601" ]'

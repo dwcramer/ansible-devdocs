@@ -1,17 +1,41 @@
 ---
 - hosts: localhost
   user: "{{ linuxUser }}"
-  roles:
-    - role: cisco.manage-ccs-instance
+  vars:
+    node_name: "{{ hostname}}.{{ zone }}"
+  tasks:
+    - name: Create or remove an instace in OpenStack/Cisco Cloud
+      local_action:
+        module: nova_compute
+        security_groups: "{{ security_groups }}"
+        name: "{{ node_name }}"
+        image_name: "{{ image_name }}"
+        key_name: "{{ key_name }}"
+        floating_ip_pools: "{{ floating_ip_pools }}"
+        wait_for: 400
+        nics: [ net-id: "{{ network_id }}" ]
+        flavor_id: "{{ flavor_id }}"
+        state: "{{ instance_state }}"
+      register: openstack
+      tags: launch-ccs-instance
+    - name: Wait for SSH to come up
+      local_action:
+        module: wait_for
+        host: "{{ openstack.public_ip | join('') }}"
+        port: 22
+      when: instance_state == "present"
+      tags: launch-ccs-instance
+    - name: Add host to inventory
+      add_host:
+        name: "{{ node_name }}"
+        ansible_ssh_host: "{{ openstack.public_ip | join('') }}"
+        groups: just_created
+      tags: launch-ccs-instance
+      when: instance_state == "present"
 - hosts: just_created
   user: "{{ linuxUser }}"
   sudo: yes
   pre_tasks:
-    - name: Add {{ hostname }}.{{ zone }} to /etc/hosts
-      lineinfile:
-        dest: "/etc/hosts"
-        line: "127.0.1.1 {{ hostname }}.{{ zone }} {{ hostname }}"
-        insertafter: "^127.0.0.1 localhost"
     - name: Install packages
       apt:
         name: "{{ item }}"
@@ -67,3 +91,9 @@
       service:
         name: mongod
         state: started
+    - name: Run bower install devdocs
+      bower:
+        path: "/home/{{ linuxUser }}/devdocs"
+    - name: Run npm install in devdocs
+      npm:
+        path: "/home/{{ linuxUser }}/devdocs"
