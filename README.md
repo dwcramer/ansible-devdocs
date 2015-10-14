@@ -3,6 +3,9 @@
 This playbook assumes you have a python virtual environment installed
 in ./venv. Adjust the ./hosts file if you're doing something else.
 
+This playbook assumes you're set up for SSH agent forwarding:
+https://developer.github.com/guides/using-ssh-agent-forwarding/
+
 ## Setup your environment
 
 1. `cd path/to/ansible-devdocs`
