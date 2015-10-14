@@ -1,0 +1,69 @@
+---
+- hosts: localhost
+  user: "{{ linuxUser }}"
+  roles:
+    - role: cisco.manage-ccs-instance
+- hosts: just_created
+  user: "{{ linuxUser }}"
+  sudo: yes
+  pre_tasks:
+    - name: Add {{ hostname }}.{{ zone }} to /etc/hosts
+      lineinfile:
+        dest: "/etc/hosts"
+        line: "127.0.1.1 {{ hostname }}.{{ zone }} {{ hostname }}"
+        insertafter: "^127.0.0.1 localhost"
+    - name: Install packages
+      apt:
+        name: "{{ item }}"
+        update_cache: yes
+        cache_valid_time: 3600
+      with_items:
+        - git
+    - name: copy the sudoers file so we can do agent forwarding
+      copy:
+        src: files/99-keep-ssh-auth-sock-env
+        dest: /etc/sudoers.d/99-keep-ssh-auth-sock-env
+        owner: root
+        group: root
+        mode: "0440"
+        validate: visudo -cf %s
+    - name: Clone devdocs repo
+      git:
+        repo: git@github.com:CiscoDevNet/devdocs.git
+        dest: "/home/{{ linuxUser }}/devdocs"
+        accept_hostkey: yes
+    - name: chmod devdocs repo
+      file:
+        path: "/home/{{ linuxUser }}/devdocs"
+        state: directory
+        recurse: yes
+        owner: "{{ linuxUser }}"
+        group: "{{ linuxUser }}"
+  roles:
+    - role: ANXS.nodejs
+      nodejs_version: "0.12.7"
+      nodejs_install_method: "binary"
+  post_tasks:
+    - name: Install node packages
+      npm:
+        name: "{{ item }}"
+        global: yes
+      with_items:
+        - yo
+        - bower
+        - grunt-cli
+    - name: Import mongo public key
+      apt_key:
+        keyserver: hkp://keyserver.ubuntu.com:80
+        id: 7F0CEB10
+    - name: Add mongo apt repo
+      apt_repository:
+        repo: "deb http://repo.mongodb.org/apt/ubuntu trusty/mongodb-org/3.0 multiverse"
+    - name: Install mongo db packages
+      apt:
+        name: mongodb-org
+        update_cache: yes
+    - name: Start mongo db
+      service:
+        name: mongod
+        state: started
