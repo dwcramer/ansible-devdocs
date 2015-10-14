@@ -19,10 +19,9 @@ https://developer.github.com/guides/using-ssh-agent-forwarding/
 1. Adjust `iotsp-internal-us-internal.sh-project.sh` as necessary for the CCS
    tenant you intend to use. Source it to set the appropriate OpenStack
    environment variables.
-2. Adjust any values in `vars.yml`. The securty group should have at least
+2. Adjust any values in `vars.yml`. The security group should have at least
     ports 22 and 9000 open.
 3. Run the playbook:
    ```
    ANSIBLE_HOST_KEY_CHECKING=false ansible-playbook devdocs.xbudev.org.yml -e @vars.yml -i hosts
-
    ```
